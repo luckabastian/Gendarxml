@@ -4,6 +4,9 @@ const passuid = '6ac83a31-453a-45a3-b01d-1bd20ee9101f';
 const TELEGRAM_BOT_TOKEN = '7813433823:AAG23Gu9rPzEASZPqIPE9pQXzR4louLV-gY';
 const TELEGRAM_USER_ID = 'ariyelDlacasa'; // Nama Telegram pengguna
 
+// Menyimpan ID chat pengguna yang sudah menerima pesan kesalahan
+const usersWithError = new Set();
+
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request));
 });
@@ -47,7 +50,12 @@ Silakan kirim proxy dan port sekarang!
       if (text?.includes(":")) {
         const [proxy, port] = text.split(":");
         if (!validateIP(proxy) || !validatePort(port)) {
-          return sendMessage(chatId, `❌ Format salah! Kirim dengan format Proxy:Port\nContoh: 192.168.1.1:443`);
+          // Hanya kirim pesan kesalahan jika pengguna belum menerima pesan kesalahan
+          if (!usersWithError.has(chatId)) {
+            await sendMessage(chatId, `❌ Format salah! Kirim dengan format Proxy:Port\nContoh: 192.168.1.1:443`);
+            usersWithError.add(chatId);  // Tandai pengguna yang sudah menerima pesan kesalahan
+          }
+          return new Response("OK");
         }
 
         // Generate akun Trojan dan VLESS dengan nama ID Telegram
