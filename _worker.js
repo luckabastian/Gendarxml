@@ -8,7 +8,7 @@ const apiEmail = "c7znp4jjsj@privaterelay.appleid.com"; // Ganti dengan email ya
 const accountID = "e6ab19737b33001ff6f5943dde890aa3"; // Ganti dengan Account ID kalian (https://dash.cloudflare.com -> Klik domain yang kalian gunakan)
 const zoneID = "eb3bc7b185fc6f846c692b4f0fc1d9f9"; // Ganti dengan Zone ID kalian (https://dash.cloudflare.com -> Klik domain yang kalian gunakan)
 let isApiReady = false;
-let proxyIP = "https://github.com/Gendarxml/Nautica/blob/main/proxyList.txt";
+let proxyIP = "https://github.com/Gendarxml/Gendarxml/blob/main/proxy_list.txt";
 let cachedProxyList = [];
 
 // Constant
