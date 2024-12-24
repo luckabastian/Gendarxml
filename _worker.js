@@ -9,7 +9,7 @@ const accountID = "e6ab19737b33001ff6f5943dde890aa3"; // Ganti dengan Account ID
 const zoneID = "eb3bc7b185fc6f846c692b4f0fc1d9f9"; // Ganti dengan Zone ID kalian (https://dash.cloudflare.com -> Klik domain yang kalian gunakan)
 let isApiReady = false;
 let proxyIP = "https://github.com/Gendarxml/Gendarxml/blob/main/proxy_list.txt";
-let cachedProxyList = [];
+let cachedProxyList = [https://github.com/Gendarxml/Gendarxml/blob/main/rawProxyList.txt];
 
 // Constant
 const APP_DOMAIN = `${serviceName}.${rootDomain}`;
