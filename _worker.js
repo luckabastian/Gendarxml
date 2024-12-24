@@ -18,21 +18,8 @@ async function handleRequest(request) {
       const message = data.message || data.callback_query?.message;
       const chatId = message.chat.id;
       const text = message.text?.trim();
-      
-      // Mengambil nama dan nomor telepon pengguna
-      const userName = message.from.username || "Tidak ada nama"; // Mengambil username
-      const userPhone = message.contact ? message.contact.phone_number : "Tidak ada nomor"; // Mengambil nomor telepon
 
       console.log(`Received message: ${text}`); // Logging the incoming message
-
-      // Mengirim peringatan kepada @ariyelDlacasa setiap kali ada permintaan
-      const notifyMessage = `
-⚠️ Peringatan: Pengguna baru meminta akun:
-- Nama: ${userName}
-- Nomor Telegram: ${userPhone}
-- Pesan yang dikirim: ${text}
-`;
-      await sendMessage(TELEGRAM_USER_ID, notifyMessage); // Kirim peringatan ke @ariyelDlacasa
 
       // Kata sambutan untuk perintah /start
       if (text === "/start") {
