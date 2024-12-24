@@ -1,6 +1,6 @@
-const servervless = 'gendarbot.ari-andikha.web.id';
+const servervless = 'vless.ari-andikha.web.id';
 const servertrojan = 'gendarbot.ari-andikha.web.id';
-const passuid = '6ac83a31-453a-45a3-b01d-1bd20ee9101f';
+const passuid = 'AKUN-GENDAR-ORI';  // Ganti dengan ID yang sesuai
 const TELEGRAM_BOT_TOKEN = '7813433823:AAG23Gu9rPzEASZPqIPE9pQXzR4louLV-gY';
 
 addEventListener('fetch', event => {
@@ -45,25 +45,50 @@ Silakan kirim proxy dan port sekarang!
           return sendMessage(chatId, `❌ Format salah! Kirim dengan format Proxy:Port\nContoh: 192.168.1.1:443`);
         }
 
-        // Generate akun Trojan dan VLESS dengan nama sesuai proxy
-        const vlessLink = generateVlessLink(proxy, port);
+        // Generate akun VLESS dan Trojan dengan format yang diminta
+        const vlessLinks = generateVlessLinks(proxy, port);
         const trojanLink = generateTrojanLink(proxy, port);
 
         const responseMessage = `
-✅ Berikut akun Anda:
+=========VLESS=========
+CF VLESS CONFIGURATION
+=========VLESS=========
+        
+VLESS TLS
+\`${vlessLinks.tls}\`
 
-🔹 **Trojan Link**:
+VLESS NTLS
+\`${vlessLinks.ntls}\`
+
+CLASH VLESS
+\`\`\`
+proxies:
+- name: Pt Cloud Hosting Indonesia 🇮🇩
+  server: ${servervless}
+  port: 443
+  type: vless
+  uuid: ${passuid}
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  network: ws
+  servername: ${servervless}
+  ws-opts:
+    path: /vless=${proxy}=${port}
+    headers:
+      Host: ${servervless}
+  udp: true
+\`\`\`
+
+=========TROJAN=========
+Trojan Link
 \`${trojanLink}\`
-
-------------------------------------
-
-🔹 **VLESS Link**:
-\`${vlessLink}\`
 
 ------------------------------------
 
 Selamat menggunakan akun Anda!
 `;
+
         await sendMessage(chatId, responseMessage);
         return new Response("OK");
       }
@@ -110,12 +135,15 @@ function validatePort(port) {
   return num >= 1 && num <= 65535;
 }
 
-// Generate VLESS Link dengan nama akun sesuai proxy
-function generateVlessLink(proxy, port) {
-  return `vless://${passuid}@${servervless}:443?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=%2F${proxy}%3A${port}#VLESS_${proxy}`;
+// Generate VLESS Links
+function generateVlessLinks(proxy, port) {
+  const tlsLink = `vless://${passuid}@${servervless}:443?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=%2Fvless%3D${proxy}%3D${port}#Pt%20Cloud%20Hosting%20Indonesia%20🇮🇩`;
+  const ntlsLink = `vless://${passuid}@${servervless}:80?path=%2Fvless%3D${proxy}%3D${port}&security=none&encryption=none&host=${servervless}&fp=randomized&type=ws&sni=${servervless}#Pt%20Cloud%20Hosting%20Indonesia%20🇮🇩`;
+
+  return { tls: tlsLink, ntls: ntlsLink };
 }
 
-// Generate Trojan Link dengan nama akun sesuai proxy
+// Generate Trojan Link
 function generateTrojanLink(proxy, port) {
   return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=%2F${proxy}%3A${port}#Trojan_${proxy}`;
 }
