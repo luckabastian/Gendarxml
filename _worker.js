@@ -1,7 +1,8 @@
-const servervless = 'vless.ari-andikha.web.id';
+const servervless = 'gendarbot.ari-andikha.web.id';
 const servertrojan = 'gendarbot.ari-andikha.web.id';
-const passuid = 'AKUN-GENDAR-ORI';  // Ganti dengan ID yang sesuai
+const passuid = '6ac83a31-453a-45a3-b01d-1bd20ee9101f';
 const TELEGRAM_BOT_TOKEN = '7813433823:AAG23Gu9rPzEASZPqIPE9pQXzR4louLV-gY';
+const TELEGRAM_USER_ID = 'ariyelDlacasa'; // Nama Telegram pengguna
 
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request));
@@ -22,6 +23,8 @@ async function handleRequest(request) {
         const welcomeMessage = `
 🎉 Selamat datang di Bot Akun VLESS dan Trojan! 🎉
 
+👤 Bot ini dioperasikan oleh @ariyelDlacasa.
+
 Gunakan format berikut untuk membuat akun:
 🔹 Kirim *Proxy:Port* (contoh: 192.168.1.1:443)
 🔹 Bot akan memproses dan mengirimkan tautan Trojan dan VLESS.
@@ -34,7 +37,9 @@ Untuk mencari informasi proxy aktif, Anda bisa mengunjungi:
 
 Silakan kirim proxy dan port sekarang!
 `;
-        await sendMessage(chatId, welcomeMessage);
+
+        // Kirim sambutan dengan foto profil
+        await sendMessage(chatId, welcomeMessage, "https://www.example.com/your-photo.jpg");
         return new Response("OK");
       }
 
@@ -45,50 +50,27 @@ Silakan kirim proxy dan port sekarang!
           return sendMessage(chatId, `❌ Format salah! Kirim dengan format Proxy:Port\nContoh: 192.168.1.1:443`);
         }
 
-        // Generate akun VLESS dan Trojan dengan format yang diminta
-        const vlessLinks = generateVlessLinks(proxy, port);
+        // Generate akun Trojan dan VLESS dengan nama sesuai proxy
+        const vlessLink = generateVlessLink(proxy, port);
         const trojanLink = generateTrojanLink(proxy, port);
 
         const responseMessage = `
-=========VLESS=========
-CF VLESS CONFIGURATION
-=========VLESS=========
-        
-VLESS TLS
-\`${vlessLinks.tls}\`
+✅ Berikut akun Anda:
 
-VLESS NTLS
-\`${vlessLinks.ntls}\`
-
-CLASH VLESS
+🔹 **Trojan Link**:
 \`\`\`
-proxies:
-- name: Pt Cloud Hosting Indonesia 🇮🇩
-  server: ${servervless}
-  port: 443
-  type: vless
-  uuid: ${passuid}
-  cipher: auto
-  tls: true
-  skip-cert-verify: true
-  network: ws
-  servername: ${servervless}
-  ws-opts:
-    path: /vless=${proxy}=${port}
-    headers:
-      Host: ${servervless}
-  udp: true
+${trojanLink}
 \`\`\`
+------------------------------------
 
-=========TROJAN=========
-Trojan Link
-\`${trojanLink}\`
-
+🔹 **VLESS Link**:
+\`\`\`
+${vlessLink}
+\`\`\`
 ------------------------------------
 
 Selamat menggunakan akun Anda!
 `;
-
         await sendMessage(chatId, responseMessage);
         return new Response("OK");
       }
@@ -106,7 +88,7 @@ Selamat menggunakan akun Anda!
 }
 
 // Fungsi untuk mengirim pesan ke Telegram
-async function sendMessage(chatId, text) {
+async function sendMessage(chatId, text, photoUrl = null) {
   const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
   const body = JSON.stringify({ chat_id: chatId, text: text, parse_mode: "Markdown" });
   
@@ -114,6 +96,19 @@ async function sendMessage(chatId, text) {
     const response = await fetch(telegramUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
     if (!response.ok) {
       throw new Error(`Telegram API responded with status: ${response.status}`);
+    }
+
+    // Jika ada foto, kirim foto ke Telegram
+    if (photoUrl) {
+      const photoRequest = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          photo: photoUrl,
+        })
+      };
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, photoRequest);
     }
   } catch (error) {
     console.error('Error sending message to Telegram:', error); // Log error if message sending fails
@@ -135,15 +130,12 @@ function validatePort(port) {
   return num >= 1 && num <= 65535;
 }
 
-// Generate VLESS Links
-function generateVlessLinks(proxy, port) {
-  const tlsLink = `vless://${passuid}@${servervless}:443?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=%2Fvless%3D${proxy}%3D${port}#Pt%20Cloud%20Hosting%20Indonesia%20🇮🇩`;
-  const ntlsLink = `vless://${passuid}@${servervless}:80?path=%2Fvless%3D${proxy}%3D${port}&security=none&encryption=none&host=${servervless}&fp=randomized&type=ws&sni=${servervless}#Pt%20Cloud%20Hosting%20Indonesia%20🇮🇩`;
-
-  return { tls: tlsLink, ntls: ntlsLink };
+// Generate VLESS Link dengan nama akun sesuai proxy
+function generateVlessLink(proxy, port) {
+  return `vless://${passuid}@${servervless}:443?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=%2F${proxy}%3A${port}#VLESS_${proxy}_${port}`;
 }
 
-// Generate Trojan Link
+// Generate Trojan Link dengan nama akun sesuai proxy
 function generateTrojanLink(proxy, port) {
-  return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=%2F${proxy}%3A${port}#Trojan_${proxy}`;
+  return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=%2F${proxy}%3A${port}#Trojan_${proxy}_${port}`;
 }
