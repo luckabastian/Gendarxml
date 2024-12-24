@@ -4,103 +4,96 @@ const passuid = '6ac83a31-453a-45a3-b01d-1bd20ee9101f';
 const TELEGRAM_BOT_TOKEN = '7961283450:AAGvj_tjUn4kGwQzruOepP-3S32uTqpoKto';
 
 addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request))
-})
+  event.respondWith(handleRequest(event.request));
+});
 
 async function handleRequest(request) {
-  const url = new URL(request.url)
+  if (request.method === 'POST') {
+    const data = await request.json();
+    const message = data.message || data.callback_query?.message;
+    const chatId = message.chat.id;
+    const text = message.text?.trim();
 
-  if (url.pathname === `/webhook`) {
-    const json = await request.json()
-    const message = json.message
-    if (message && message.text) {
-      const userId = message.from.id
-      const text = message.text.trim()
+    // Kata sambutan untuk perintah /start
+    if (text === "/start") {
+      const welcomeMessage = `
+🎉 Selamat datang di Bot Akun VLESS dan Trojan! 🎉
 
-      // Perintah /start untuk sambutan pertama
-      if (text === "/start") {
-        const welcomeMessage = `
-Selamat datang di Bot Akun VLESS dan Trojan!
+Gunakan format berikut untuk membuat akun:
+🔹 Kirim *Proxy:Port* (contoh: 192.168.1.1:443)
+🔹 Bot akan memproses dan mengirimkan tautan Trojan dan VLESS.
 
-Gunakan perintah berikut untuk membuat akun:
+Contoh:
+192.168.1.1:443
 
-**/createakun <IP> <Port>**
-
-Contoh: 
-/createakun 192.168.1.1 725
-
-Bot ini akan membuatkan akun VLESS dan Trojan untuk Anda dengan IP dan port yang Anda berikan.
-
-Silakan masukkan perintah untuk memulai!
-`
-        await sendTelegramMessage(userId, welcomeMessage)
-        return new Response('OK', { status: 200 })
-      }
-
-      // Memeriksa apakah perintah yang dikirimkan sesuai dengan format /createakun
-      if (text.startsWith("/createakun")) {
-        const args = text.split(" ")
-        if (args.length !== 3) {
-          return new Response("Format salah! Gunakan: /createakun <IP> <Port>", {
-            status: 400
-          })
-        }
-
-        const ip = args[1]
-        const port = args[2]
-
-        const vlessAccount = generateVlessAccount(ip, port)
-        const trojanAccount = generateTrojanAccount(ip, port)
-
-        const responseMessage = `
-**Akun VLESS**:
-\`\`\`
-${vlessAccount}
-\`\`\`
-**Akun Trojan**:
-\`\`\`
-${trojanAccount}
-\`\`\`
-`
-
-        // Kirim hasil ke Telegram user
-        await sendTelegramMessage(userId, responseMessage)
-        return new Response("Akun berhasil dibuat dan dikirim melalui Telegram", { status: 200 })
-      }
+Silakan kirim proxy dan port sekarang!
+`;
+      await sendMessage(chatId, welcomeMessage);
+      return new Response("OK");
     }
 
-    return new Response('OK', { status: 200 })
+    // Jika format input adalah Proxy:Port
+    if (text?.includes(":")) {
+      const [proxy, port] = text.split(":");
+      if (!validateIP(proxy) || !validatePort(port)) {
+        return sendMessage(chatId, `❌ Format salah! Kirim dengan format Proxy:Port\nContoh: 192.168.1.1:443`);
+      }
+
+      // Generate akun Trojan dan VLESS
+      const vlessLink = generateVlessLink(proxy, port);
+      const trojanLink = generateTrojanLink(proxy, port);
+
+      const responseMessage = `
+✅ Berikut akun Anda:
+
+🔹 **Trojan Link**:
+\`${trojanLink}\`
+
+🔹 **VLESS Link**:
+\`${vlessLink}\`
+
+Selamat menggunakan akun Anda!
+`;
+      await sendMessage(chatId, responseMessage);
+      return new Response("OK");
+    }
+
+    // Jika format tidak dikenali
+    await sendMessage(chatId, `❌ Format tidak dikenali! Kirim dengan format Proxy:Port\nContoh: 192.168.1.1:443`);
+    return new Response("OK");
+  } else {
+    return new Response("Method Not Allowed", { status: 405 });
   }
-
-  return new Response('Not Found', { status: 404 })
-}
-
-// Fungsi untuk menghasilkan akun VLESS
-function generateVlessAccount(ip, port) {
-  return `vless://${passuid}@${servervless}:443?security=tls&encryption=none&type=ws&host=${servervless}&path=%2F${ip}%3D${port}&sni=${servervless}&fp=randomized#VLESS_${ip}`;
-}
-
-// Fungsi untuk menghasilkan akun Trojan
-function generateTrojanAccount(ip, port) {
-  return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=%2F${ip}%3D${port}&sni=${servertrojan}#Trojan_${ip}`;
 }
 
 // Fungsi untuk mengirim pesan ke Telegram
-async function sendTelegramMessage(userId, message) {
-  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`
-  const payload = {
-    chat_id: userId,
-    text: message,
-    parse_mode: "Markdown",
-  }
+async function sendMessage(chatId, text) {
+  const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const body = JSON.stringify({ chat_id: chatId, text: text, parse_mode: "Markdown" });
+  await fetch(telegramUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
+}
 
-  const init = {
-    method: 'POST',
-    body: JSON.stringify(payload),
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  }
+// Validasi Proxy (IP Address)
+function validateIP(ip) {
+  const ipParts = ip.split(".");
+  return ipParts.length === 4 && ipParts.every(part => {
+    const num = parseInt(part, 10);
+    return num >= 0 && num <= 255;
+  });
+}
 
-  await fetch(url, init)
+// Validasi Port
+function validatePort(port) {
+  const num = parseInt(port, 10);
+  return num >= 1 && num <= 65535;
+}
+
+// Generate VLESS Link
+function generateVlessLink(proxy, port) {
+  return `vless://${passuid}@${servervless}:443?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=%2Fproxy%2F${proxy}%2Fport%2F${port}#VLESS_${proxy}`;
+}
+
+// Generate Trojan Link
+function generateTrojanLink(proxy, port) {
+  return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=%2Fproxy%2F${proxy}%2Fport%2F${port}#Trojan_${proxy}`;
 }
