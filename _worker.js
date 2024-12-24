@@ -1,141 +1,99 @@
-const servervless = 'gendarbot.ari-andikha.web.id';
-const servertrojan = 'gendarbot.ari-andikha.web.id';
-const passuid = '6ac83a31-453a-45a3-b01d-1bd20ee9101f';
-const TELEGRAM_BOT_TOKEN = '7813433823:AAG23Gu9rPzEASZPqIPE9pQXzR4louLV-gY';
-const TELEGRAM_USER_ID = 'ariyelDlacasa'; // Nama Telegram pengguna
-
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request));
-});
-
-async function handleRequest(request) {
-  try {
-    if (request.method === 'POST') {
-      const data = await request.json();
-      const message = data.message || data.callback_query?.message;
-      const chatId = message.chat.id;
-      const text = message.text?.trim();
-
-      console.log(`Received message: ${text}`); // Logging the incoming message
-
-      // Kata sambutan untuk perintah /start
-      if (text === "/start") {
-        const welcomeMessage = `
-🎉 Selamat datang di Bot Akun VLESS dan Trojan! 🎉
-
-👤 Bot ini dioperasikan oleh @ariyelDlacasa.
-
-Gunakan format berikut untuk membuat akun:
-🔹 Kirim *Proxy:Port* (contoh: 192.168.1.1:443)
-🔹 Bot akan memproses dan mengirimkan tautan Trojan dan VLESS.
-
-Contoh:
-192.168.1.1:443
-
-Untuk mencari informasi proxy aktif, Anda bisa mengunjungi:
-[Daftar Proxy Aktif](https://github.com/Gendarxml/Nautica/blob/main/proxyList.txt)
-
-Silakan kirim proxy dan port sekarang!
-`;
-
-        // Kirim sambutan dengan foto profil
-        await sendMessage(chatId, welcomeMessage, "https://www.example.com/your-photo.jpg");
-        return new Response("OK");
-      }
-
-      // Jika format input adalah Proxy:Port
-      if (text?.includes(":")) {
-        const [proxy, port] = text.split(":");
-        if (!validateIP(proxy) || !validatePort(port)) {
-          return sendMessage(chatId, `❌ Format salah! Kirim dengan format Proxy:Port\nContoh: 192.168.1.1:443`);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Proxy Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
         }
+        .container {
+            margin: 20px;
+        }
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .proxies-list {
+            margin-top: 20px;
+            display: none;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Search for Active Proxies</h1>
+        <button class="btn" onclick="showProxies()">Click here to find active proxies</button>
+        <div class="proxies-list" id="proxies-list">
+            <h2>Proxies:</h2>
+            <pre id="proxy-list-text">Loading...</pre>
+        </div>
+    </div>
 
-        // Generate akun Trojan dan VLESS dengan nama sesuai proxy
-        const vlessLink = generateVlessLink(proxy, port);
-        const trojanLink = generateTrojanLink(proxy, port);
+    <script>
+        function showProxies() {
+            // List of proxy servers
+            const proxies = {
+                "SG": [
+                    "101.32.247.126:725",
+                    "103.180.161.10:587",
+                    "103.180.161.69:587",
+                    "103.180.161.123:587",
+                    "103.3.63.253:46683",
+                    "104.248.145.216:443",
+                    "104.248.146.212:2053",
+                    "104.248.146.212:8443",
+                    "104.248.154.142:8443",
+                    "104.248.154.142:2053"
+                ],
+                "HK": [
+                    "101.32.10.244:10457",
+                    "101.32.40.116:8888",
+                    "103.103.245.51:16118",
+                    "103.127.248.51:443",
+                    "103.133.178.229:26010",
+                    "103.149.91.215:5888",
+                    "103.172.41.223:443",
+                    "103.175.14.144:443",
+                    "103.195.49.224:1009",
+                    "103.195.49.225:1009"
+                ],
+                // Add more countries/proxies here...
+            };
 
-        const responseMessage = `
-✅ Berikut akun Anda:
+            // Format the proxy list into a string
+            let proxyText = "";
+            for (let country in proxies) {
+                proxyText += `"${country}": [\n`;
+                proxies[country].forEach(proxy => {
+                    proxyText += `    "${proxy}",\n`;
+                });
+                proxyText += "  ],\n";
+            }
 
-🔹 **Trojan Link**:
-\`\`\`
-${trojanLink}
-\`\`\`
-------------------------------------
+            // Display the formatted proxies
+            document.getElementById("proxy-list-text").textContent = proxyText;
 
-🔹 **VLESS Link**:
-\`\`\`
-${vlessLink}
-\`\`\`
-------------------------------------
-
-Selamat menggunakan akun Anda!
-`;
-        await sendMessage(chatId, responseMessage);
-        return new Response("OK");
-      }
-
-      // Jika format tidak dikenali
-      await sendMessage(chatId, `❌ Format tidak dikenali! Kirim dengan format Proxy:Port\nContoh: 192.168.1.1:443`);
-      return new Response("OK");
-    } else {
-      return new Response("Method Not Allowed", { status: 405 });
-    }
-  } catch (error) {
-    console.error('Error processing request:', error); // Improved error logging
-    return new Response("Internal Server Error", { status: 500 });
-  }
-}
-
-// Fungsi untuk mengirim pesan ke Telegram
-async function sendMessage(chatId, text, photoUrl = null) {
-  const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  const body = JSON.stringify({ chat_id: chatId, text: text, parse_mode: "Markdown" });
-  
-  try {
-    const response = await fetch(telegramUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
-    if (!response.ok) {
-      throw new Error(`Telegram API responded with status: ${response.status}`);
-    }
-
-    // Jika ada foto, kirim foto ke Telegram
-    if (photoUrl) {
-      const photoRequest = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          photo: photoUrl,
-        })
-      };
-      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, photoRequest);
-    }
-  } catch (error) {
-    console.error('Error sending message to Telegram:', error); // Log error if message sending fails
-  }
-}
-
-// Validasi Proxy (IP Address)
-function validateIP(ip) {
-  const ipParts = ip.split(".");
-  return ipParts.length === 4 && ipParts.every(part => {
-    const num = parseInt(part, 10);
-    return num >= 0 && num <= 255;
-  });
-}
-
-// Validasi Port
-function validatePort(port) {
-  const num = parseInt(port, 10);
-  return num >= 1 && num <= 65535;
-}
-
-// Generate VLESS Link dengan nama akun sesuai proxy
-function generateVlessLink(proxy, port) {
-  return `vless://${passuid}@${servervless}:443?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=%2F${proxy}%3A${port}#VLESS_${proxy}_${port}`;
-}
-
-// Generate Trojan Link dengan nama akun sesuai proxy
-function generateTrojanLink(proxy, port) {
-  return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=%2F${proxy}%3A${port}#Trojan_${proxy}_${port}`;
-}
+            // Show the proxy list container
+            document.getElementById("proxies-list").style.display = "block";
+        }
+    </script>
+</body>
+</html>
