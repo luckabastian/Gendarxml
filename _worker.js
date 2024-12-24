@@ -21,6 +21,26 @@ async function handleRequest(request) {
       const userId = message.from.id
       const text = message.text.trim()
 
+      // Perintah /start untuk sambutan pertama
+      if (text === "/start") {
+        const welcomeMessage = `
+Selamat datang di Bot Akun VLESS dan Trojan!
+
+Gunakan perintah berikut untuk membuat akun:
+
+**/createakun <IP> <Port> <Path>**
+
+Contoh: 
+/createakun 192.168.1.1 443 /vlesspath
+
+Bot ini akan membuatkan akun VLESS dan Trojan untuk Anda. Setiap akun yang dibuat akan berisi informasi lengkap termasuk IP, port, path, dan ping ke server.
+
+Silakan masukkan perintah untuk memulai!
+`
+        await sendTelegramMessage(userId, welcomeMessage)
+        return new Response('OK', { status: 200 })
+      }
+
       // Memeriksa apakah perintah yang dikirimkan sesuai dengan format /createakun
       if (text.startsWith("/createakun")) {
         const args = text.split(" ")
