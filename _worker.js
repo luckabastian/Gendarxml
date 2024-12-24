@@ -27,7 +27,7 @@ Gunakan perintah berikut untuk membuat akun:
 **/createakun <IP> <Port>**
 
 Contoh: 
-/createakun 103.133.223.52 2096
+/createakun 192.168.1.1 725
 
 Bot ini akan membuatkan akun VLESS dan Trojan untuk Anda dengan IP dan port yang Anda berikan.
 
@@ -82,32 +82,7 @@ function generateVlessAccount(ip, port) {
 
 // Fungsi untuk menghasilkan akun Trojan
 function generateTrojanAccount(ip, port) {
-  return `=========TROJAN=========
-CF TROJAN CONFIGURATION
-=========TROJAN=========
-
-TROJAN TLS
-trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=%2Ftrojan%3D${ip}%3D${port}#Pt%20Cloud%20Teknologi%20Nusantara%20🇮🇩
-
-TROJAN NTLS
-trojan://${passuid}@${servertrojan}:80?path=%2Ftrojan%3D${ip}%3D${port}&security=none&encryption=none&host=${servertrojan}&fp=randomized&type=ws&sni=${servertrojan}#Pt%20Cloud%20Teknologi%20Nusantara%20🇮🇩
-
-CLASH TROJAN
-proxies:
-- name: Pt Cloud Teknologi Nusantara 🇮🇩
-  server: ${servertrojan}
-  port: 443
-  type: trojan
-  password: ${passuid}
-  skip-cert-verify: true
-  network: ws
-  sni: ${servertrojan}
-  ws-opts:
-    path: /trojan=${ip}=${port}
-    headers:
-      Host: ${servertrojan}
-  udp: true
-`;
+  return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=%2F${ip}%3D${port}&sni=${servertrojan}#Trojan_${ip}`;
 }
 
 // Fungsi untuk mengirim pesan ke Telegram
