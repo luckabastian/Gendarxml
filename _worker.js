@@ -52,9 +52,21 @@ Silakan kirim proxy dan port sekarang!
 🔹 **VLESS Link**:
 \`${vlessLink}\`
 
-Selamat menggunakan akun Anda!
+Anda dapat menyalin akun di bawah ini dengan satu klik:
+
 `;
-      await sendMessage(chatId, responseMessage);
+
+      // Inline keyboard untuk menyalin akun
+      const inlineKeyboard = {
+        "inline_keyboard": [
+          [
+            { text: "Salin Trojan Link", callback_data: `copy_${trojanLink}` },
+            { text: "Salin VLESS Link", callback_data: `copy_${vlessLink}` }
+          ]
+        ]
+      };
+
+      await sendMessageWithInlineKeyboard(chatId, responseMessage, inlineKeyboard);
       return new Response("OK");
     }
 
@@ -70,6 +82,18 @@ Selamat menggunakan akun Anda!
 async function sendMessage(chatId, text) {
   const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
   const body = JSON.stringify({ chat_id: chatId, text: text, parse_mode: "Markdown" });
+  await fetch(telegramUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
+}
+
+// Fungsi untuk mengirim pesan dengan Inline Keyboard
+async function sendMessageWithInlineKeyboard(chatId, text, inlineKeyboard) {
+  const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const body = JSON.stringify({
+    chat_id: chatId,
+    text: text,
+    parse_mode: "Markdown",
+    reply_markup: inlineKeyboard
+  });
   await fetch(telegramUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
 }
 
@@ -90,14 +114,12 @@ function validatePort(port) {
 
 // Generate VLESS Link
 function generateVlessLink(proxy, port) {
-  // Ubah path sesuai dengan format yang diminta /{IP}={Port}
   const path = `/${proxy}=${port}`;
   return `vless://${passuid}@${servervless}:443?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=${encodeURIComponent(path)}#VLESS_${proxy}`;
 }
 
 // Generate Trojan Link
 function generateTrojanLink(proxy, port) {
-  // Ubah path sesuai dengan format yang diminta /{IP}={Port}
   const path = `/${proxy}=${port}`;
   return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=${encodeURIComponent(path)}#Trojan_${proxy}`;
 }
