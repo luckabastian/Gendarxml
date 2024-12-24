@@ -90,14 +90,10 @@ function validatePort(port) {
 
 // Generate VLESS Link
 function generateVlessLink(proxy, port) {
-  // Ubah path sesuai dengan format yang diminta /{IP}={Port}
-  const path = `/${proxy}=${port}`;
-  return `vless://${passuid}@${servervless}:443?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=${encodeURIComponent(path)}#VLESS_${proxy}`;
+  return `vless://${passuid}@${servervless}:443?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=%2Fproxy%2F${proxy}%2Fport%2F${port}#VLESS_${proxy}`;
 }
 
 // Generate Trojan Link
 function generateTrojanLink(proxy, port) {
-  // Ubah path sesuai dengan format yang diminta /{IP}={Port}
-  const path = `/${proxy}=${port}`;
-  return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=${encodeURIComponent(path)}#Trojan_${proxy}`;
+  return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=%2Fproxy%2F${proxy}%2Fport%2F${port}#Trojan_${proxy}`;
 }
