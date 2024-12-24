@@ -1,6 +1,5 @@
 const servervless = 'gendarbot.ari-andikha.web.id';
 const servertrojan = 'gendarbot.ari-andikha.web.id';
-const serverwildcard = 'gendarbot.ari-andikha.web.id';
 const passuid = '6ac83a31-453a-45a3-b01d-1bd20ee9101f';
 const TELEGRAM_BOT_TOKEN = '7961283450:AAGvj_tjUn4kGwQzruOepP-3S32uTqpoKto';
 
@@ -11,142 +10,85 @@ addEventListener('fetch', event => {
 async function handleRequest(request) {
   if (request.method === 'POST') {
     const data = await request.json();
-    const message = data.message || data.callback_query?.message;
+    const message = data.message || data.callback_query.message;
     const chatId = message.chat.id;
-    const messageId = message.message_id;
+    const messageText = message.text?.trim();
 
-    if (data.callback_query) {
-      const callbackData = data.callback_query.data;
-      if (callbackData.startsWith('confirm_trojan_')) {
-        const [ip, port] = callbackData.split('_').slice(2);
-        const responseMessage = generateTrojanConfig(ip, port);
-        await deleteMessage(chatId, messageId);
-        return sendMessage(chatId, responseMessage);
-      } else if (callbackData.startsWith('confirm_vless_')) {
-        const [ip, port] = callbackData.split('_').slice(2);
-        const responseMessage = generateVlessConfig(ip, port);
-        await deleteMessage(chatId, messageId);
-        return sendMessage(chatId, responseMessage);
-      } else if (callbackData.startsWith('cancel')) {
-        await deleteMessage(chatId, messageId);
-        return sendMessage(chatId, 'Proses dibatalkan.');
-      }
-    } else {
-      const ipAddress = message.text.trim();
-      const [ip, port] = ipAddress.includes(':') ? ipAddress.split(':') : [ipAddress, '443'];
+    // Jika pesan berupa teks
+    if (messageText) {
+      const [ip, port] = messageText.includes(':') ? messageText.split(':') : [messageText, '443'];
 
+      // Validasi IP dan Port
       if (!validateIP(ip) || !validatePort(port)) {
-        return sendMessage(
-          chatId,
-          '⚡ **Easy Create VLESS and Trojan Serverless** ⚡\n\nKirim IP dan port dengan format: `<IP>:<Port>`\nContoh: `192.168.1.1:443`\nJika port tidak disertakan, akan digunakan port default: `443`.'
-        );
+        return sendMessage(chatId, `⚠️ Format salah! Gunakan: <IP>:<Port>\nContoh: \`192.168.1.1:443\`\nJika port tidak disebutkan, bot akan menggunakan default: 443.`);
       }
 
-      const proxyMessage = `
-🌐 **Proxy Detected** 🌐
-IP: ${ip}
-Port: ${port}
+      // Buat konfigurasi VLESS dan Trojan
+      const vlessConfig = generateVlessLink(ip, port);
+      const trojanConfig = generateTrojanLink(ip, port);
 
-Pilih jenis konfigurasi:
-  1️⃣ **Trojan**
-  2️⃣ **VLESS**
+      const responseMessage = `
+✅ **Konfigurasi Akun Berhasil Dibuat** ✅
+
+🌐 **VLESS**:
+\`\`\`
+${vlessConfig}
+\`\`\`
+
+🌐 **Trojan**:
+\`\`\`
+${trojanConfig}
+\`\`\`
+
+Gunakan konfigurasi ini untuk menghubungkan ke server Anda!
 `;
-      const buttons = [
-        { text: 'Trojan', callback_data: `confirm_trojan_${ip}_${port}` },
-        { text: 'VLESS', callback_data: `confirm_vless_${ip}_${port}` },
-        { text: 'Batalkan', callback_data: `cancel` },
-      ];
 
-      return sendInlineKeyboard(chatId, proxyMessage, buttons);
+      // Kirim hasil konfigurasi ke user
+      return sendMessage(chatId, responseMessage, true);
     }
-  } else {
-    return new Response('Method not allowed', { status: 405 });
   }
+
+  return new Response('Method Not Allowed', { status: 405 });
 }
 
-async function sendMessage(chatId, text) {
-  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  const body = JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' });
-  await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+// Fungsi untuk membuat konfigurasi VLESS
+function generateVlessLink(ip, port) {
+  return `vless://${passuid}@${servervless}:443?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=/vless/${ip}:${port}#VLESS-${ip}`;
 }
 
-async function sendInlineKeyboard(chatId, text, buttons) {
-  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  const body = JSON.stringify({
+// Fungsi untuk membuat konfigurasi Trojan
+function generateTrojanLink(ip, port) {
+  return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=/trojan/${ip}:${port}#TROJAN-${ip}`;
+}
+
+// Fungsi untuk mengirim pesan ke Telegram
+async function sendMessage(chatId, text, isMarkdown = false) {
+  const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const payload = {
     chat_id: chatId,
     text: text,
-    reply_markup: { inline_keyboard: [buttons] },
-    parse_mode: 'Markdown',
+    parse_mode: isMarkdown ? 'Markdown' : 'HTML'
+  };
+  const response = await fetch(telegramUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
   });
-  await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+
+  return response.ok;
 }
 
-async function deleteMessage(chatId, messageId) {
-  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/deleteMessage`;
-  const body = JSON.stringify({ chat_id: chatId, message_id: messageId });
-  await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
-}
-
+// Fungsi untuk validasi IP
 function validateIP(ip) {
-  const parts = ip.split('.');
-  return parts.length === 4 && parts.every(part => !isNaN(part) && +part >= 0 && +part <= 255);
+  const ipParts = ip.split('.');
+  return ipParts.length === 4 && ipParts.every(part => {
+    const num = parseInt(part, 10);
+    return num >= 0 && num <= 255;
+  });
 }
 
+// Fungsi untuk validasi Port
 function validatePort(port) {
-  const num = parseInt(port, 10);
-  return !isNaN(num) && num >= 1 && num <= 65535;
-}
-
-function generateTrojanConfig(ip, port) {
-  return `
-🔐 **Trojan Config**
-- Server: ${servertrojan}
-- Port: ${port}
-- UUID: ${passuid}
-- Path: \`/trojan/${ip}:${port}\`
-
-🌍 **Clash Configuration**:
-\`\`\`
-proxies:
-  - name: Trojan-${ip}
-    type: trojan
-    server: ${servertrojan}
-    port: ${port}
-    password: ${passuid}
-    network: ws
-    skip-cert-verify: true
-    ws-opts:
-      path: /trojan/${ip}:${port}
-      headers:
-        Host: ${servertrojan}
-\`\`\`
-`;
-}
-
-function generateVlessConfig(ip, port) {
-  return `
-🔐 **VLESS Config**
-- Server: ${servervless}
-- Port: ${port}
-- UUID: ${passuid}
-- Path: \`/vless/${ip}:${port}\`
-
-🌍 **Clash Configuration**:
-\`\`\`
-proxies:
-  - name: VLESS-${ip}
-    type: vless
-    server: ${servervless}
-    port: ${port}
-    uuid: ${passuid}
-    cipher: auto
-    network: ws
-    tls: true
-    skip-cert-verify: true
-    ws-opts:
-      path: /vless/${ip}:${port}
-      headers:
-        Host: ${servervless}
-\`\`\`
-`;
+  const portNum = parseInt(port, 10);
+  return !isNaN(portNum) && portNum >= 1 && portNum <= 65535;
 }
