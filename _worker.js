@@ -1,4 +1,16 @@
-// Fungsi untuk menangani request POST
+const servervless = 'gendarbot.ari-andikha.web.id';
+const servertrojan = 'gendarbot.ari-andikha.web.id';
+const passuid = '6ac83a31-453a-45a3-b01d-1bd20ee9101f';
+const TELEGRAM_BOT_TOKEN = '7813433823:AAG23Gu9rPzEASZPqIPE9pQXzR4louLV-gY';
+const TELEGRAM_USER_ID = 'ariyelDlacasa'; // Nama Telegram pengguna
+
+// Menyimpan ID chat pengguna yang sudah menerima pesan kesalahan
+const usersWithError = new Set();
+
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request));
+});
+
 async function handleRequest(request) {
   try {
     if (request.method === 'POST') {
@@ -6,19 +18,21 @@ async function handleRequest(request) {
       const message = data.message || data.callback_query?.message;
       const chatId = message.chat.id;
       const text = message.text?.trim();
-      const userName = message.from.username || "Tidak ada nama"; // Menyimpan username Telegram
-      const userPhone = message.contact ? message.contact.phone_number : "Tidak ada nomor"; // Menyimpan nomor Telegram
+      
+      // Mengambil nama dan nomor telepon pengguna
+      const userName = message.from.username || "Tidak ada nama"; // Mengambil username
+      const userPhone = message.contact ? message.contact.phone_number : "Tidak ada nomor"; // Mengambil nomor telepon
 
       console.log(`Received message: ${text}`); // Logging the incoming message
 
-      // Kirim informasi nama dan nomor pengguna ke @ariyeldlacasa
+      // Mengirim peringatan kepada @ariyelDlacasa setiap kali ada permintaan
       const notifyMessage = `
-👤 Pengguna meminta akun:
+⚠️ Peringatan: Pengguna baru meminta akun:
 - Nama: ${userName}
 - Nomor Telegram: ${userPhone}
 - Pesan yang dikirim: ${text}
 `;
-      await sendMessage(TELEGRAM_USER_ID, notifyMessage); // Kirim informasi ke @ariyeldlacasa
+      await sendMessage(TELEGRAM_USER_ID, notifyMessage); // Kirim peringatan ke @ariyelDlacasa
 
       // Kata sambutan untuk perintah /start
       if (text === "/start") {
@@ -92,4 +106,44 @@ Selamat menggunakan akun Anda!
     console.error('Error processing request:', error); // Improved error logging
     return new Response("Internal Server Error", { status: 500 });
   }
+}
+
+// Fungsi untuk mengirim pesan ke Telegram
+async function sendMessage(chatId, text, photoUrl = null) {
+  const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const body = JSON.stringify({ chat_id: chatId, text: text, parse_mode: "Markdown" });
+  
+  try {
+    const response = await fetch(telegramUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
+    if (!response.ok) {
+      throw new Error(`Telegram API responded with status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Error sending message to Telegram:', error); // Log error if message sending fails
+  }
+}
+
+// Validasi Proxy (IP Address)
+function validateIP(ip) {
+  const ipParts = ip.split(".");
+  return ipParts.length === 4 && ipParts.every(part => {
+    const num = parseInt(part, 10);
+    return num >= 0 && num <= 255;
+  });
+}
+
+// Validasi Port
+function validatePort(port) {
+  const num = parseInt(port, 10);
+  return num >= 1 && num <= 65535;
+}
+
+// Generate VLESS Link dengan nama Telegram
+function generateVlessLink(proxy, port) {
+  return `vless://${passuid}@${servervless}:443?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=%2F${proxy}%3A${port}#${TELEGRAM_USER_ID}`;
+}
+
+// Generate Trojan Link dengan nama Telegram
+function generateTrojanLink(proxy, port) {
+  return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=%2F${proxy}%3A${port}#${TELEGRAM_USER_ID}`;
 }
