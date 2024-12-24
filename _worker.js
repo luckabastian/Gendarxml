@@ -29,6 +29,9 @@ Gunakan format berikut untuk membuat akun:
 Contoh:
 192.168.1.1:443
 
+Untuk mencari informasi proxy aktif, Anda bisa mengunjungi:
+[Daftar Proxy Aktif](https://github.com/Gendarxml/Nautica/blob/main/proxyList.txt)
+
 Silakan kirim proxy dan port sekarang!
 `;
         await sendMessage(chatId, welcomeMessage);
@@ -42,7 +45,7 @@ Silakan kirim proxy dan port sekarang!
           return sendMessage(chatId, `❌ Format salah! Kirim dengan format Proxy:Port\nContoh: 192.168.1.1:443`);
         }
 
-        // Generate akun Trojan dan VLESS
+        // Generate akun Trojan dan VLESS dengan nama sesuai proxy
         const vlessLink = generateVlessLink(proxy, port);
         const trojanLink = generateTrojanLink(proxy, port);
 
@@ -107,12 +110,12 @@ function validatePort(port) {
   return num >= 1 && num <= 65535;
 }
 
-// Generate VLESS Link with custom path
+// Generate VLESS Link dengan nama akun sesuai proxy
 function generateVlessLink(proxy, port) {
   return `vless://${passuid}@${servervless}:443?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=%2F${proxy}%3A${port}#VLESS_${proxy}`;
 }
 
-// Generate Trojan Link with custom path
+// Generate Trojan Link dengan nama akun sesuai proxy
 function generateTrojanLink(proxy, port) {
   return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=%2F${proxy}%3A${port}#Trojan_${proxy}`;
 }
