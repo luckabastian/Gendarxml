@@ -10,85 +10,90 @@ addEventListener('fetch', event => {
 async function handleRequest(request) {
   if (request.method === 'POST') {
     const data = await request.json();
-    const message = data.message || data.callback_query.message;
+    const message = data.message || data.callback_query?.message;
     const chatId = message.chat.id;
-    const messageText = message.text?.trim();
+    const text = message.text?.trim();
 
-    // Jika pesan berupa teks
-    if (messageText) {
-      const [ip, port] = messageText.includes(':') ? messageText.split(':') : [messageText, '443'];
+    // Kata sambutan untuk perintah /start
+    if (text === "/start") {
+      const welcomeMessage = `
+🎉 Selamat datang di Bot Akun VLESS dan Trojan! 🎉
 
-      // Validasi IP dan Port
-      if (!validateIP(ip) || !validatePort(port)) {
-        return sendMessage(chatId, `⚠️ Format salah! Gunakan: <IP>:<Port>\nContoh: \`192.168.1.1:443\`\nJika port tidak disebutkan, bot akan menggunakan default: 443.`);
+Gunakan format berikut untuk membuat akun:
+🔹 Kirim *Proxy:Port* (contoh: 192.168.1.1:443)
+🔹 Bot akan memproses dan mengirimkan tautan Trojan dan VLESS.
+
+Contoh:
+192.168.1.1:443
+
+Silakan kirim proxy dan port sekarang!
+`;
+      await sendMessage(chatId, welcomeMessage);
+      return new Response("OK");
+    }
+
+    // Jika format input adalah Proxy:Port
+    if (text?.includes(":")) {
+      const [proxy, port] = text.split(":");
+      if (!validateIP(proxy) || !validatePort(port)) {
+        return sendMessage(chatId, `❌ Format salah! Kirim dengan format Proxy:Port\nContoh: 192.168.1.1:443`);
       }
 
-      // Buat konfigurasi VLESS dan Trojan
-      const vlessConfig = generateVlessLink(ip, port);
-      const trojanConfig = generateTrojanLink(ip, port);
+      // Generate akun Trojan dan VLESS
+      const vlessLink = generateVlessLink(proxy, port);
+      const trojanLink = generateTrojanLink(proxy, port);
 
       const responseMessage = `
-✅ **Konfigurasi Akun Berhasil Dibuat** ✅
+✅ Berikut akun Anda:
 
-🌐 **VLESS**:
-\`\`\`
-${vlessConfig}
-\`\`\`
+🔹 **Trojan Link**:
+\`${trojanLink}\`
 
-🌐 **Trojan**:
-\`\`\`
-${trojanConfig}
-\`\`\`
+🔹 **VLESS Link**:
+\`${vlessLink}\`
 
-Gunakan konfigurasi ini untuk menghubungkan ke server Anda!
+Selamat menggunakan akun Anda!
 `;
-
-      // Kirim hasil konfigurasi ke user
-      return sendMessage(chatId, responseMessage, true);
+      await sendMessage(chatId, responseMessage);
+      return new Response("OK");
     }
+
+    // Jika format tidak dikenali
+    await sendMessage(chatId, `❌ Format tidak dikenali! Kirim dengan format Proxy:Port\nContoh: 192.168.1.1:443`);
+    return new Response("OK");
+  } else {
+    return new Response("Method Not Allowed", { status: 405 });
   }
-
-  return new Response('Method Not Allowed', { status: 405 });
-}
-
-// Fungsi untuk membuat konfigurasi VLESS
-function generateVlessLink(ip, port) {
-  return `vless://${passuid}@${servervless}:443?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=/vless/${ip}:${port}#VLESS-${ip}`;
-}
-
-// Fungsi untuk membuat konfigurasi Trojan
-function generateTrojanLink(ip, port) {
-  return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=/trojan/${ip}:${port}#TROJAN-${ip}`;
 }
 
 // Fungsi untuk mengirim pesan ke Telegram
-async function sendMessage(chatId, text, isMarkdown = false) {
+async function sendMessage(chatId, text) {
   const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  const payload = {
-    chat_id: chatId,
-    text: text,
-    parse_mode: isMarkdown ? 'Markdown' : 'HTML'
-  };
-  const response = await fetch(telegramUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  return response.ok;
+  const body = JSON.stringify({ chat_id: chatId, text: text, parse_mode: "Markdown" });
+  await fetch(telegramUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
 }
 
-// Fungsi untuk validasi IP
+// Validasi Proxy (IP Address)
 function validateIP(ip) {
-  const ipParts = ip.split('.');
+  const ipParts = ip.split(".");
   return ipParts.length === 4 && ipParts.every(part => {
     const num = parseInt(part, 10);
     return num >= 0 && num <= 255;
   });
 }
 
-// Fungsi untuk validasi Port
+// Validasi Port
 function validatePort(port) {
-  const portNum = parseInt(port, 10);
-  return !isNaN(portNum) && portNum >= 1 && portNum <= 65535;
+  const num = parseInt(port, 10);
+  return num >= 1 && num <= 65535;
+}
+
+// Generate VLESS Link
+function generateVlessLink(proxy, port) {
+  return `vless://${passuid}@${servervless}:${port}?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=%2Fvl%3D${encodeURIComponent(proxy)}:${port}#VLESS_${proxy}`;
+}
+
+// Generate Trojan Link
+function generateTrojanLink(proxy, port) {
+  return `trojan://${passuid}@${servertrojan}:${port}?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=%2Ftrojan%3D${encodeURIComponent(proxy)}:${port}#Trojan_${proxy}`;
 }
