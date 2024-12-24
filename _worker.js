@@ -46,13 +46,11 @@ Silakan kirim proxy dan port sekarang!
       const responseMessage = `
 ✅ Berikut akun Anda:
 
-🔹 **VLESS Link**:
-\`${vlessLink}\`
-
-═══════════════════
-
 🔹 **Trojan Link**:
 \`${trojanLink}\`
+
+🔹 **VLESS Link**:
+\`${vlessLink}\`
 
 Selamat menggunakan akun Anda!
 `;
@@ -92,14 +90,14 @@ function validatePort(port) {
 
 // Generate VLESS Link
 function generateVlessLink(proxy, port) {
-  // Mengubah path sesuai format /{IP}={Port}
+  // Ubah path sesuai dengan format yang diminta /{IP}={Port}
   const path = `/${proxy}=${port}`;
   return `vless://${passuid}@${servervless}:443?encryption=none&security=tls&sni=${servervless}&fp=randomized&type=ws&host=${servervless}&path=${encodeURIComponent(path)}#VLESS_${proxy}`;
 }
 
 // Generate Trojan Link
 function generateTrojanLink(proxy, port) {
-  // Mengubah path sesuai format /{IP}={Port}
+  // Ubah path sesuai dengan format yang diminta /{IP}={Port}
   const path = `/${proxy}=${port}`;
   return `trojan://${passuid}@${servertrojan}:443?encryption=none&security=tls&sni=${servertrojan}&fp=randomized&type=ws&host=${servertrojan}&path=${encodeURIComponent(path)}#Trojan_${proxy}`;
 }
