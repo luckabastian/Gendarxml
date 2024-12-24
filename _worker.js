@@ -38,8 +38,8 @@ Klik di bawah untuk mencari proxy aktif:
 Silakan kirim proxy dan port sekarang!
 `;
 
-        // Kirim sambutan tanpa foto, hanya dengan profil Telegram
-        await sendMessage(chatId, welcomeMessage, `https://t.me/ariyelDlacasa`);
+        // Kirim sambutan tanpa foto, tetap mempertahankan link GitHub
+        await sendMessage(chatId, welcomeMessage);
         return new Response("OK");
       }
 
@@ -96,19 +96,6 @@ async function sendMessage(chatId, text, photoUrl = null) {
     const response = await fetch(telegramUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
     if (!response.ok) {
       throw new Error(`Telegram API responded with status: ${response.status}`);
-    }
-
-    // Jika ada foto, kirim foto ke Telegram
-    if (photoUrl) {
-      const photoRequest = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          photo: photoUrl,
-        })
-      };
-      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, photoRequest);
     }
   } catch (error) {
     console.error('Error sending message to Telegram:', error); // Log error if message sending fails
