@@ -1,4 +1,4 @@
-<const servervless = 'gendarbot.ari-andikha.web.id';
+const servervless = 'gendarbot.ari-andikha.web.id';
 const servertrojan = 'gendarbot.ari-andikha.web.id';
 const passuid = '6ac83a31-453a-45a3-b01d-1bd20ee9101f';
 const TELEGRAM_BOT_TOKEN = '7813433823:AAG23Gu9rPzEASZPqIPE9pQXzR4louLV-gY';
@@ -33,13 +33,13 @@ Contoh:
 192.168.1.1:443
 
 Klik di bawah untuk mencari proxy aktif:
-[Daftar Proxy Aktif](https://github.com/Gendarxml/Cek-domain/blob/main/genarate-url.js)
+[Daftar Proxy Aktif](https://github.com/Gendarxml/Nautica/blob/main/proxyList.txt)
 
 Silakan kirim proxy dan port sekarang!
 `;
 
-        // Kirim sambutan tanpa foto, hanya dengan profil Telegram
-        await sendMessage(chatId, welcomeMessage, `https://t.me/ariyelDlacasa`);
+        // Kirim sambutan dengan foto profil
+        await sendMessage(chatId, welcomeMessage, "https://www.example.com/your-photo.jpg");
         return new Response("OK");
       }
 
