@@ -38,14 +38,6 @@ Kirim pesan dengan format berikut:
 192.168.1.1:443
 \`\`\`
 
-🔗 **Daftar Bug Operator**:
-Untuk melihat daftar bug operator, kunjungi tautan berikut:
-[Daftar Bug Operator](https://github.com/Gendarxml/BAHAN/blob/main/List%20Paket)
-
-🔗 **Daftar Proxy Aktif**:
-Untuk melihat daftar proxy aktif, kunjungi tautan berikut:
-[Daftar Proxy Aktif](https://github.com/Gendarxml/BAHAN/blob/main/PROXY%20AKTIF)
-
 📩 **Hubungi Saya**:
 Jika Anda memerlukan bantuan, hubungi saya di sini: [@ariyelDlacasa](https://t.me/ariyelDlacasa)
 
