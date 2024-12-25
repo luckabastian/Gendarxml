@@ -1,7 +1,7 @@
 const servervless = 'gendarbot.ari-andikha.web.id';
 const servertrojan = 'gendarbot.ari-andikha.web.id';
 const passuid = '6ac83a31-453a-45a3-b01d-1bd20ee9101f';
-const TELEGRAM_BOT_TOKEN = '7813433823:AAG23Gu9rPzEASZPqIPE9pQXzR4louLV-gY';
+const TELEGRAM_BOT_TOKEN = '7921302665:AAFynbwLQWJOTRCTnnsINj-mUueAnq6ENVc';
 const TELEGRAM_USER_ID = 'ariyelDlacasa'; // Nama Telegram pengguna
 
 // Menyimpan ID chat pengguna yang sudah menerima pesan kesalahan
