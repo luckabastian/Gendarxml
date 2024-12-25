@@ -18,10 +18,11 @@ async function handleRequest(request) {
       const message = data.message || data.callback_query?.message;
       const chatId = message.chat.id;
       const text = message.text?.trim();
+      const callbackData = data.callback_query?.data; // Menangani data tombol inline
 
       console.log(`Received message: ${text}`); // Logging the incoming message
 
-      // Kata sambutan untuk perintah /start
+      // Jika menerima perintah /start
       if (text === "/start") {
         const welcomeMessage = `
 🎉 Selamat datang di Bot Akun VLESS dan Trojan! 🎉
@@ -31,12 +32,6 @@ async function handleRequest(request) {
 Gunakan format berikut untuk membuat akun:
 🔹 Kirim *Proxy:Port* (contoh: 192.168.1.1:443)
 🔹 Bot akan memproses dan mengirimkan tautan Trojan dan VLESS.
-
-Contoh:
-192.168.1.1:443
-
-Klik di bawah untuk mencari proxy aktif:
-[Daftar Proxy Aktif](https://github.com/Gendarxml/Cek-domain/blob/main/genarate-url.js)
 
 Masukkan Proxy dan Port sekarang!
 `;
@@ -73,16 +68,52 @@ Masukkan Proxy dan Port sekarang!
 🔹 **Alamat Proxy**: ${proxy}:${port}
 ------------------------------------
 Sekarang Anda bisa memilih untuk mendapatkan akun **Trojan** atau **VLESS**.
-------------------------------------
-[Ambil Akun Trojan] [Ambil Akun VLESS]
 `;
 
-        await sendMessage(chatId, responseMessage);
+        // Menyediakan tombol untuk memilih akun
+        const keyboard = {
+          inline_keyboard: [
+            [
+              { text: "Ambil Akun Trojan", callback_data: `trojan_${proxy}_${port}` },
+              { text: "Ambil Akun VLESS", callback_data: `vless_${proxy}_${port}` }
+            ]
+          ]
+        };
+
+        await sendMessage(chatId, responseMessage, keyboard);
         return new Response("OK");
       }
 
       // Jika format tidak dikenali
       await sendMessage(chatId, `❌ Format tidak dikenali! Kirim dengan format Proxy:Port\nContoh: 192.168.1.1:443`);
+      return new Response("OK");
+    } else if (data.callback_query) {
+      const chatId = data.callback_query.message.chat.id;
+      const callbackData = data.callback_query.data; // Menangani data tombol inline
+      const [type, proxy, port] = callbackData.split('_'); // Memisahkan data callback untuk mendapatkan jenis akun dan proxy
+
+      let linkMessage = '';
+
+      // Generate link berdasarkan pilihan pengguna
+      if (type === 'trojan') {
+        linkMessage = generateTrojanLink(proxy, port);
+      } else if (type === 'vless') {
+        linkMessage = generateVlessLink(proxy, port);
+      }
+
+      // Kirim akun yang diminta
+      const responseMessage = `
+✅ Berikut akun Anda:
+
+🔹 **Akun ${type.toUpperCase()}**:
+\`\`\`
+${linkMessage}
+\`\`\`
+------------------------------------
+Gunakan akun dengan baik, dan pastikan untuk tidak membagikan informasi ini ke pihak yang tidak dipercaya.
+`;
+
+      await sendMessage(chatId, responseMessage);
       return new Response("OK");
     } else {
       return new Response("Method Not Allowed", { status: 405 });
@@ -94,9 +125,14 @@ Sekarang Anda bisa memilih untuk mendapatkan akun **Trojan** atau **VLESS**.
 }
 
 // Fungsi untuk mengirim pesan ke Telegram
-async function sendMessage(chatId, text, photoUrl = null) {
+async function sendMessage(chatId, text, replyMarkup = null) {
   const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  const body = JSON.stringify({ chat_id: chatId, text: text, parse_mode: "Markdown" });
+  const body = JSON.stringify({
+    chat_id: chatId,
+    text: text,
+    parse_mode: "Markdown",
+    reply_markup: replyMarkup
+  });
   
   try {
     const response = await fetch(telegramUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
@@ -126,7 +162,6 @@ function validatePort(port) {
 // Fungsi untuk memeriksa status proxy
 async function checkProxyStatus(proxy) {
   // Simulasi pemeriksaan status (dapat diganti dengan layanan yang valid)
-  // Cek apakah proxy aktif (ini harus diganti dengan pengecekan sebenarnya)
   const isActive = true; // Bisa menggunakan layanan pengecekan IP seperti ip-api.com atau ipinfo.io
   
   // Jika proxy aktif, simulasi ping
