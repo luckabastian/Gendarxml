@@ -70,7 +70,7 @@ Silakan kirim proxy dan port sekarang!
 
 🔹 **Alamat Proxy**: ${proxyInfo.address}
 🔹 **Nama Proxy**: ${proxyInfo.isp}
-🔹 **Bendera**: ${proxyInfo.flag}
+🔹 **Bendera**: ${proxyInfo.flag} ${proxyInfo.country}
 🔹 **Status**: Aktif
 
 🔹 **Trojan Link**:
