@@ -30,18 +30,11 @@ async function handleRequest(request) {
 
 Gunakan format berikut untuk membuat akun:
 🔹 Kirim *Proxy:Port* (contoh: 192.168.1.1:443)
-🔹 Bot akan memproses dan mengirimkan tautan Trojan dan VLESS.
-
-Contoh:
-192.168.1.1:443
-
-Klik di bawah untuk mencari proxy aktif:
-[Daftar Proxy Aktif](https://github.com/Gendarxml/Cek-domain/blob/main/genarate-url.js)
 
 Silakan kirim proxy dan port sekarang!
 `;
 
-        // Kirim sambutan tanpa foto, tetap mempertahankan link GitHub
+        // Kirim sambutan tanpa foto
         await sendMessage(chatId, welcomeMessage);
         return new Response("OK");
       }
@@ -65,16 +58,15 @@ Silakan kirim proxy dan port sekarang!
         const responseMessage = `
 ✅ Berikut informasi proxy Anda:
 
-🌍 **Bendera**: 🇮🇩 (Indonesia - Disesuaikan dengan alamat proxy yang dimasukkan)
-📍 **Alamat Proxy**: ${proxy}
+🌍 **Alamat Proxy**: ${proxy}
 ⏱️ **Status**: Aktif
 🔌 **Ping**: 20ms
 🗺️ **Lokasi**: Jakarta, Indonesia
 
 ------------------------------------
 
-🔹 [Ambil Akun Trojan](#trojan)
-🔹 [Ambil Akun VLESS](#vless)
+🔹 [Ambil Akun Trojan](https://t.me/${TELEGRAM_USER_ID}?start=trojan-${proxy}-${port})
+🔹 [Ambil Akun VLESS](https://t.me/${TELEGRAM_USER_ID}?start=vless-${proxy}-${port})
 `;
 
         await sendMessage(chatId, responseMessage);
