@@ -58,56 +58,28 @@ Silakan kirim proxy dan port sekarang!
           return new Response("OK");
         }
 
-        // Mendapatkan informasi terkait proxy (misalnya bendera dan status aktif)
-        const proxyInfo = await getProxyInfo(proxy); // Fungsi untuk mendapatkan informasi proxy
-        const flag = proxyInfo?.flag || '🌍';  // Default bendera jika tidak ditemukan
-        const status = proxyInfo?.status || 'Tidak Aktif';  // Status proxy default "Tidak Aktif" jika tidak ditemukan
+        // Generate akun Trojan dan VLESS dengan nama ID Telegram
+        const vlessLink = generateVlessLink(proxy, port);
+        const trojanLink = generateTrojanLink(proxy, port);
 
         const responseMessage = `
 ✅ Berikut akun Anda:
 
-🔹 **Proxy**: ${proxy}:${port}
-🔹 **Alamat Proxy**: ${proxy}
-🔹 **Bendera**: ${flag}
-🔹 **Status**: ${status}
-
-------------------------------------
-
-Jika proxy Anda aktif, Anda dapat mengambil akun Trojan dan VLESS melalui tautan di bawah yang bisa dicopy:
-`;
-
-        // Membuat pesan dengan link Trojan dan VLESS dalam format code block
-        const trojanLink = generateTrojanLink(proxy, port);
-        const vlessLink = generateVlessLink(proxy, port);
-
-        const responseWithLinks = `
 🔹 **Trojan Link**:
 \`\`\`
 ${trojanLink}
 \`\`\`
+------------------------------------
 
 🔹 **VLESS Link**:
 \`\`\`
 ${vlessLink}
 \`\`\`
+------------------------------------
 
-Silakan salin dan gunakan tautan tersebut untuk akses Trojan dan VLESS.
+Selamat menggunakan akun Anda!
 `;
-
-        // Membuat tombol inline untuk /start
-        const keyboard = {
-          "inline_keyboard": [
-            [
-              {
-                "text": "Mulai Ulang",
-                "callback_data": "/start"
-              }
-            ]
-          ]
-        };
-
-        // Kirim pesan dengan link Trojan dan VLESS, serta tombol /start
-        await sendMessageWithKeyboard(chatId, responseMessage + responseWithLinks, keyboard);
+        await sendMessage(chatId, responseMessage);
         return new Response("OK");
       }
 
@@ -123,26 +95,6 @@ Silakan salin dan gunakan tautan tersebut untuk akses Trojan dan VLESS.
   }
 }
 
-// Fungsi untuk mengirim pesan ke Telegram dengan tombol inline
-async function sendMessageWithKeyboard(chatId, text, keyboard) {
-  const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  const body = JSON.stringify({
-    chat_id: chatId,
-    text: text,
-    parse_mode: "Markdown",
-    reply_markup: keyboard  // Menambahkan inline keyboard
-  });
-  
-  try {
-    const response = await fetch(telegramUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
-    if (!response.ok) {
-      throw new Error(`Telegram API responded with status: ${response.status}`);
-    }
-  } catch (error) {
-    console.error('Error sending message to Telegram:', error);  // Log error jika gagal mengirim pesan
-  }
-}
-
 // Fungsi untuk mengirim pesan ke Telegram
 async function sendMessage(chatId, text, photoUrl = null) {
   const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -154,7 +106,7 @@ async function sendMessage(chatId, text, photoUrl = null) {
       throw new Error(`Telegram API responded with status: ${response.status}`);
     }
   } catch (error) {
-    console.error('Error sending message to Telegram:', error); // Log error jika gagal mengirim pesan
+    console.error('Error sending message to Telegram:', error); // Log error if message sending fails
   }
 }
 
