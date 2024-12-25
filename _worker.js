@@ -70,7 +70,7 @@ Silakan kirim proxy dan port sekarang!
 
 🔹 **Alamat Proxy**: ${proxyInfo.address}
 🔹 **Nama Proxy**: ${proxyInfo.isp}
-🔹 **Bendera**: ${proxyInfo.flag} ${proxyInfo.country}
+🔹 **Negara**: ${proxyInfo.country}
 🔹 **Status**: Aktif
 
 🔹 **Trojan Link**:
@@ -142,14 +142,7 @@ async function getProxyInfo(proxy) {
     region: data.regionName, // Wilayah
     city: data.city, // Kota
     isp: data.isp, // Nama ISP / Provider Proxy
-    flag: getFlagEmoji(data.country), // Emoji Bendera berdasarkan kode negara
   };
-}
-
-// Fungsi untuk mendapatkan emoji bendera berdasarkan kode negara
-function getFlagEmoji(countryCode) {
-  const codePoints = countryCode.toUpperCase().split('').map(c => 0x1F1E6 - 65 + c.charCodeAt(0));
-  return String.fromCodePoint(...codePoints);
 }
 
 // Validasi Proxy (IP Address)
