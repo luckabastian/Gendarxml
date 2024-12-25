@@ -1,9 +1,7 @@
 const servervless = 'gendarbot.ari-andikha.web.id';
 const servertrojan = 'gendarbot.ari-andikha.web.id';
 const passuid = '6ac83a31-453a-45a3-b01d-1bd20ee9101f';
-const TELEGRAM_BOT_TOKEN = 'Token for the bot Ariy Tongak @GendarXMLBot has been revoked. New token is:
-
-7813433823:AAFLiPPBW9dJK82ovo4lKZObhaQVMSqAumw';
+const TELEGRAM_BOT_TOKEN = '7813433823:AAG23Gu9rPzEASZPqIPE9pQXzR4louLV-gY';
 const TELEGRAM_USER_ID = 'ariyelDlacasa'; // Nama Telegram pengguna
 
 // Menyimpan ID chat pengguna yang sudah menerima pesan kesalahan
@@ -20,11 +18,10 @@ async function handleRequest(request) {
       const message = data.message || data.callback_query?.message;
       const chatId = message.chat.id;
       const text = message.text?.trim();
-      const callbackData = data.callback_query?.data; // Menangani data tombol inline
 
       console.log(`Received message: ${text}`); // Logging the incoming message
 
-      // Jika menerima perintah /start
+      // Kata sambutan untuk perintah /start
       if (text === "/start") {
         const welcomeMessage = `
 🎉 Selamat datang di Bot Akun VLESS dan Trojan! 🎉
@@ -35,9 +32,16 @@ Gunakan format berikut untuk membuat akun:
 🔹 Kirim *Proxy:Port* (contoh: 192.168.1.1:443)
 🔹 Bot akan memproses dan mengirimkan tautan Trojan dan VLESS.
 
-Masukkan Proxy dan Port sekarang!
+Contoh:
+192.168.1.1:443
+
+Klik di bawah untuk mencari proxy aktif:
+[Daftar Proxy Aktif](https://github.com/Gendarxml/Cek-domain/blob/main/genarate-url.js)
+
+Silakan kirim proxy dan port sekarang!
 `;
 
+        // Kirim sambutan tanpa foto, tetap mempertahankan link GitHub
         await sendMessage(chatId, welcomeMessage);
         return new Response("OK");
       }
@@ -46,6 +50,7 @@ Masukkan Proxy dan Port sekarang!
       if (text?.includes(":")) {
         const [proxy, port] = text.split(":");
         if (!validateIP(proxy) || !validatePort(port)) {
+          // Hanya kirim pesan kesalahan jika pengguna belum menerima pesan kesalahan
           if (!usersWithError.has(chatId)) {
             await sendMessage(chatId, `❌ Format salah! Kirim dengan format Proxy:Port\nContoh: 192.168.1.1:443`);
             usersWithError.add(chatId);  // Tandai pengguna yang sudah menerima pesan kesalahan
@@ -53,69 +58,33 @@ Masukkan Proxy dan Port sekarang!
           return new Response("OK");
         }
 
-        // Memeriksa status proxy
-        const status = await checkProxyStatus(proxy);
-        
-        // Pesan dengan informasi proxy dan status
+        // Generate akun Trojan dan VLESS dengan nama ID Telegram
+        const vlessLink = generateVlessLink(proxy, port);
+        const trojanLink = generateTrojanLink(proxy, port);
+
         const responseMessage = `
-✅ Anda telah mengirimkan Proxy dan Port yang valid:
-- **Proxy**: ${proxy}
-- **Port**: ${port}
+✅ Berikut akun Anda:
 
+🔹 **Trojan Link**:
+\`\`\`
+${trojanLink}
+\`\`\`
 ------------------------------------
-🔹 **Status Proxy**: *${status.active ? 'Aktif' : 'Tidak Aktif'}*
-🔹 **Bendera**: ${status.active ? '🇺🇸' : '❌'}   # Bendera disesuaikan dengan negara alamat IP
-🔹 **Ping**: ${status.ping}ms
 
-🔹 **Alamat Proxy**: ${proxy}:${port}
+🔹 **VLESS Link**:
+\`\`\`
+${vlessLink}
+\`\`\`
 ------------------------------------
-Sekarang Anda bisa memilih untuk mendapatkan akun **Trojan** atau **VLESS**.
+
+Selamat menggunakan akun Anda!
 `;
-
-        // Menyediakan tombol untuk memilih akun
-        const keyboard = {
-          inline_keyboard: [
-            [
-              { text: "Ambil Akun Trojan", callback_data: `trojan_${proxy}_${port}` },
-              { text: "Ambil Akun VLESS", callback_data: `vless_${proxy}_${port}` }
-            ]
-          ]
-        };
-
-        await sendMessage(chatId, responseMessage, keyboard);
+        await sendMessage(chatId, responseMessage);
         return new Response("OK");
       }
 
       // Jika format tidak dikenali
       await sendMessage(chatId, `❌ Format tidak dikenali! Kirim dengan format Proxy:Port\nContoh: 192.168.1.1:443`);
-      return new Response("OK");
-    } else if (data.callback_query) {
-      const chatId = data.callback_query.message.chat.id;
-      const callbackData = data.callback_query.data; // Menangani data tombol inline
-      const [type, proxy, port] = callbackData.split('_'); // Memisahkan data callback untuk mendapatkan jenis akun dan proxy
-
-      let linkMessage = '';
-
-      // Generate link berdasarkan pilihan pengguna
-      if (type === 'trojan') {
-        linkMessage = generateTrojanLink(proxy, port);
-      } else if (type === 'vless') {
-        linkMessage = generateVlessLink(proxy, port);
-      }
-
-      // Kirim akun yang diminta
-      const responseMessage = `
-✅ Berikut akun Anda:
-
-🔹 **Akun ${type.toUpperCase()}**:
-\`\`\`
-${linkMessage}
-\`\`\`
-------------------------------------
-Gunakan akun dengan baik, dan pastikan untuk tidak membagikan informasi ini ke pihak yang tidak dipercaya.
-`;
-
-      await sendMessage(chatId, responseMessage);
       return new Response("OK");
     } else {
       return new Response("Method Not Allowed", { status: 405 });
@@ -127,14 +96,9 @@ Gunakan akun dengan baik, dan pastikan untuk tidak membagikan informasi ini ke p
 }
 
 // Fungsi untuk mengirim pesan ke Telegram
-async function sendMessage(chatId, text, replyMarkup = null) {
+async function sendMessage(chatId, text, photoUrl = null) {
   const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  const body = JSON.stringify({
-    chat_id: chatId,
-    text: text,
-    parse_mode: "Markdown",
-    reply_markup: replyMarkup
-  });
+  const body = JSON.stringify({ chat_id: chatId, text: text, parse_mode: "Markdown" });
   
   try {
     const response = await fetch(telegramUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
@@ -159,17 +123,6 @@ function validateIP(ip) {
 function validatePort(port) {
   const num = parseInt(port, 10);
   return num >= 1 && num <= 65535;
-}
-
-// Fungsi untuk memeriksa status proxy
-async function checkProxyStatus(proxy) {
-  // Simulasi pemeriksaan status (dapat diganti dengan layanan yang valid)
-  const isActive = true; // Bisa menggunakan layanan pengecekan IP seperti ip-api.com atau ipinfo.io
-  
-  // Jika proxy aktif, simulasi ping
-  const ping = isActive ? 20 : 0;  // Misalnya, jika aktif, ping = 20ms
-  
-  return { active: isActive, ping: ping };
 }
 
 // Generate VLESS Link dengan nama Telegram
