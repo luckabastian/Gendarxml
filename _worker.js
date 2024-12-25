@@ -62,12 +62,13 @@ Silakan kirim proxy dan port sekarang!
         try {
           const proxyInfo = await getProxyInfo(proxy);
 
-          // Jika proxy tidak aktif, beri tahu pengguna
-          if (proxyInfo.status === 'fail') {
-            await sendMessage(chatId, `❌ Proxy tidak aktif! Cek kembali alamat proxy dan coba lagi.`);
+          // Jika proxy tidak aktif atau status gagal, beri tahu pengguna tanpa memberikan akun Trojan/VLESS
+          if (proxyInfo.status === 'fail' || proxyInfo.status === 'dod') {
+            await sendMessage(chatId, `❌ Proxy tidak aktif atau informasi tidak dapat diakses. Cek kembali alamat proxy dan coba lagi.`);
             return new Response("OK");
           }
 
+          // Jika proxy aktif, kirimkan informasi beserta akun Trojan dan VLESS
           const vlessLink = generateVlessLink(proxy, port);
           const trojanLink = generateTrojanLink(proxy, port);
 
@@ -77,6 +78,7 @@ Silakan kirim proxy dan port sekarang!
 🔹 **Alamat Proxy**: ${proxyInfo.address}
 🔹 **Nama Proxy**: ${proxyInfo.isp}
 🔹 **Negara**: ${proxyInfo.country}
+🔹 **Status Proxy**: Aktif
 
 🔹 **Trojan Link**:
 \`\`\`
@@ -139,6 +141,10 @@ async function getProxyInfo(proxy) {
   // Periksa apakah response valid dan data yang diperlukan ada
   if (data.status === 'fail') {
     return { status: 'fail' };  // Menandakan proxy tidak aktif
+  }
+
+  if (data.status === 'dod') {
+    return { status: 'dod' };  // Status menunjukkan masalah jaringan atau kesalahan proxy
   }
 
   return {
