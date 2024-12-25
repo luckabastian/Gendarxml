@@ -62,6 +62,12 @@ Silakan kirim proxy dan port sekarang!
         try {
           const proxyInfo = await getProxyInfo(proxy);
 
+          // Jika proxy tidak aktif, beri tahu pengguna
+          if (proxyInfo.status === 'fail') {
+            await sendMessage(chatId, `❌ Proxy tidak aktif! Cek kembali alamat proxy dan coba lagi.`);
+            return new Response("OK");
+          }
+
           const vlessLink = generateVlessLink(proxy, port);
           const trojanLink = generateTrojanLink(proxy, port);
 
@@ -71,7 +77,6 @@ Silakan kirim proxy dan port sekarang!
 🔹 **Alamat Proxy**: ${proxyInfo.address}
 🔹 **Nama Proxy**: ${proxyInfo.isp}
 🔹 **Negara**: ${proxyInfo.country}
-🔹 **Status**: Aktif
 
 🔹 **Trojan Link**:
 \`\`\`
@@ -127,13 +132,13 @@ async function sendMessage(chatId, text, photoUrl = null) {
 // Fungsi untuk mendapatkan informasi proxy
 async function getProxyInfo(proxy) {
   // Menggunakan ip-api untuk mendapatkan informasi lokasi proxy dan ISP
-  const apiUrl = `http://ip-api.com/json/${proxy}?fields=country,regionName,city,isp,query`;
+  const apiUrl = `http://ip-api.com/json/${proxy}?fields=country,regionName,city,isp,query,status`;
   const response = await fetch(apiUrl);
   const data = await response.json();
 
   // Periksa apakah response valid dan data yang diperlukan ada
   if (data.status === 'fail') {
-    throw new Error('Unable to retrieve proxy information');
+    return { status: 'fail' };  // Menandakan proxy tidak aktif
   }
 
   return {
@@ -142,6 +147,7 @@ async function getProxyInfo(proxy) {
     region: data.regionName, // Wilayah
     city: data.city, // Kota
     isp: data.isp, // Nama ISP / Provider Proxy
+    status: 'active', // Proxy aktif
   };
 }
 
