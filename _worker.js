@@ -1,4 +1,4 @@
-const TELEGRAM_BOT_TOKEN = '7921302665:AAFynbwLQWJOTRCTnnsINj-mUueAnq6ENVc'; // Token Telegram Anda
+const TELEGRAM_BOT_TOKEN = '7500403218:AAFM5yIDqb2VsEK83Rh8eXvmraIYMnI6SF4'; // Token Telegram Anda
 const TELEGRAM_USER_ID = 'ariyelDlacasa'; // Nama Telegram pengguna
 
 const servervless = 'gendarbot.ari-andikha.web.id';
