@@ -1,9 +1,8 @@
 semoga sukses
 
 link proxy
-https://github.com/Gendarxml/Cek-domain/blob/main/genarate-url.js
 
-
+](https://raw.githubusercontent.com/AFRcloud/vip/refs/heads/main/vip.txt)
 
 
 UBAH DULU NAMA WRANGLER NYA 
