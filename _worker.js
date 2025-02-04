@@ -1,8 +1,8 @@
 import { connect } from "cloudflare:sockets";
 
 const proxyListURL = 'https://raw.githubusercontent.com/h58fmb0344g9h3/p57gdv3j3n0vg334/refs/heads/main/f74bjd2h2ko99f3j5';
-const namaWeb = 'BITZBLACK NETWORK'
-const linkTele = 'https://t.me/bitzblackbot'
+const namaWeb = 'BITZBLACK NETWORK';
+const linkTele = 'https://t.me/bitzblackbot';
 
 // Global Variables
 let cachedProxyList = [];
@@ -14,42 +14,30 @@ const WS_READY_STATE_CLOSING = 2;
 
 async function getProxyList(forceReload = false) {
   if (!cachedProxyList.length || forceReload) {
-    if (!proxyListURL) {
-      throw new Error("No Proxy List URL Provided!");
-    }
-
     const proxyBank = await fetch(proxyListURL);
     if (proxyBank.status === 200) {
-      const proxyString = ((await proxyBank.text()) || "").split("\n").filter(Boolean);
-      cachedProxyList = proxyString
-        .map((entry) => {
-          const [proxyIP, proxyPort, country, org] = entry.split(",");
-          return {
-            proxyIP: proxyIP || "Unknown",
-            proxyPort: proxyPort || "Unknown",
-            country: country.toUpperCase() || "Unknown",
-            org: org || "Unknown Org",
-          };
-        })
-        .filter(Boolean);
+      const proxyString = (await proxyBank.text()).split("\n").filter(Boolean);
+      cachedProxyList = proxyString.map((entry) => {
+        const [proxyIP, proxyPort, country, org] = entry.split(",");
+        return {
+          proxyIP: proxyIP || "Unknown",
+          proxyPort: proxyPort || "Unknown",
+          country: (country || "Unknown").toUpperCase(),
+          org: org || "Unknown Org",
+        };
+      });
     }
   }
-
   return cachedProxyList;
 }
 
 async function reverseProxy(request, target) {
   const targetUrl = new URL(request.url);
   targetUrl.hostname = target;
-
   const modifiedRequest = new Request(targetUrl, request);
   modifiedRequest.headers.set("X-Forwarded-Host", request.headers.get("Host"));
-
   const response = await fetch(modifiedRequest);
-  const newResponse = new Response(response.body, response);
-  newResponse.headers.set("X-Proxied-By", "Cloudflare Worker");
-
-  return newResponse;
+  return new Response(response.body, response);
 }
 
 export default {
@@ -58,86 +46,62 @@ export default {
       const url = new URL(request.url);
       const upgradeHeader = request.headers.get("Upgrade");
 
-      // Map untuk menyimpan proxy per country code
+      // Proxy state management
       const proxyState = new Map();
-
-      // Fungsi untuk memperbarui proxy setiap menit
+      
       async function updateProxies() {
-        const proxies = await getProxyList(env);
-        const groupedProxies = groupBy(proxies, "country");
-
-        for (const [countryCode, proxies] of Object.entries(groupedProxies)) {
-          const randomIndex = Math.floor(Math.random() * proxies.length);
-          proxyState.set(countryCode, proxies[randomIndex]);
+        const proxies = await getProxyList();
+        const groupedProxies = proxies.reduce((acc, proxy) => {
+          acc[proxy.country] = acc[proxy.country] || [];
+          acc[proxy.country].push(proxy);
+          return acc;
+        }, {});
+        
+        for (const [country, proxies] of Object.entries(groupedProxies)) {
+          proxyState.set(country, proxies[Math.floor(Math.random() * proxies.length)]);
         }
-
-        console.log("Proxy list updated:", Array.from(proxyState.entries()));
       }
 
-      // Jalankan pembaruan proxy setiap menit
-      ctx.waitUntil(
-        (async function periodicUpdate() {
-          await updateProxies();
-          setInterval(updateProxies, 60000); // Setiap 60 detik
-        })()
-      );
+      ctx.waitUntil((async () => {
+        await updateProxies();
+        setInterval(updateProxies, 60000);
+      })());
 
       if (upgradeHeader === "websocket") {
-        // Match path dengan format /CC atau /CCangka
         const pathMatch = url.pathname.match(/^\/([A-Z]{2})(\d+)?$/);
-
         if (pathMatch) {
-          const countryCode = pathMatch[1];
-          const index = pathMatch[2] ? parseInt(pathMatch[2], 10) - 1 : null;
-
-          console.log(`Country Code: ${countryCode}, Index: ${index}`);
-
-          // Ambil proxy berdasarkan country code
-          const proxies = await getProxyList(env);
-          const filteredProxies = proxies.filter((proxy) => proxy.country === countryCode);
-
-          if (filteredProxies.length === 0) {
-            return new Response(`No proxies available for country: ${countryCode}`, { status: 404 });
+          const [, countryCode, index] = pathMatch;
+          const proxies = await getProxyList();
+          const filteredProxies = proxies.filter(p => p.country === countryCode);
+          
+          if (!filteredProxies.length) {
+            return new Response(`No proxies for ${countryCode}`, { status: 404 });
           }
 
-          let selectedProxy;
-
-          if (index === null) {
-            // Ambil proxy acak dari state jika ada
-            selectedProxy = proxyState.get(countryCode) || filteredProxies[0];
-          } else if (index < 0 || index >= filteredProxies.length) {
-            return new Response(
-              `Index ${index + 1} out of bounds. Only ${filteredProxies.length} proxies available for ${countryCode}.`,
-              { status: 400 }
-            );
-          } else {
-            selectedProxy = filteredProxies[index];
-          }
-
+          const selectedProxy = index ? 
+            filteredProxies[parseInt(index) - 1] : 
+            proxyState.get(countryCode) || filteredProxies[0];
+          
           proxyIP = `${selectedProxy.proxyIP}:${selectedProxy.proxyPort}`;
-          console.log(`Selected Proxy: ${proxyIP}`);
-          return await websockerHandler(request);
+          return handleWebSocket(request);
         }
 
-        // Match path dengan format ip:port atau ip=port
         const ipPortMatch = url.pathname.match(/^\/(.+[:=-]\d+)$/);
-
         if (ipPortMatch) {
-          proxyIP = ipPortMatch[1].replace(/[=:-]/, ":"); // Standarisasi menjadi ip:port
-          console.log(`Direct Proxy IP: ${proxyIP}`);
-          return await websockerHandler(request, proxyIP);
+          proxyIP = ipPortMatch[1].replace(/[=:-]/, ":");
+          return handleWebSocket(request);
         }
       }
-      
+
       const bexx = url.hostname;
       const type = url.searchParams.get('type') || 'mix';
       const tls = url.searchParams.get('tls') !== 'false';
       const bugs = url.searchParams.get('bug') || bexx;
       const country = url.searchParams.get('country');
-      const limit = parseInt(url.searchParams.get('limit"), 10);
-      let configs;
+      const limit = parseInt(url.searchParams.get('limit') || "20", 10);
 
-      switch (url.pathname) {
+      let configs;
+      switch(url.pathname) {
         case '/sub/clash':
           configs = await generateClashSub(type, bugs, tls, country, limit);
           break;
@@ -160,60 +124,87 @@ export default {
           configs = await generateV2raySub(type, bugs, tls, country, limit);
           break;
         case "/web":
-          return await handleWebRequest(request);
-          break;
+          return handleWebRequest(request);
         case "/sub":
-          return new Response(await handleSubRequest(url.hostname), { headers: { 'Content-Type': 'text/html' } })
-          break;
+          return new Response(await handleSubRequest(url.hostname), 
+            { headers: { 'Content-Type': 'text/html' } });
         default:
-          const targetReverseProxy = "example.com";
-          return await reverseProxy(request, targetReverseProxy);
+          return reverseProxy(request, "example.com");
       }
-
+      
       return new Response(configs);
     } catch (err) {
-      return new Response(`An error occurred: ${err.toString()}`, {
-        status: 500,
-      });
+      return new Response(err.stack, { status: 500 });
     }
-  },
+  }
 };
 
-// Helper function: Group proxies by country
-function groupBy(array, key) {
-  return array.reduce((result, currentValue) => {
-    (result[currentValue[key]] = result[currentValue[key]] || []).push(currentValue);
-    return result;
-  }, {});
+// WebSocket Handler
+async function handleWebSocket(request) {
+  const webSocketPair = new WebSocketPair();
+  const [client, server] = Object.values(webSocketPair);
+
+  server.accept();
+  const remoteSocket = connect(proxyIP.split(":")[0], parseInt(proxyIP.split(":")[1]));
+  
+  const readableWebSocketStream = new ReadableStream({
+    start(controller) {
+      server.addEventListener("message", (event) => controller.enqueue(event.data));
+      server.addEventListener("close", () => controller.close());
+      server.addEventListener("error", (err) => controller.error(err));
+    }
+  });
+
+  readableWebSocketStream.pipeTo(remoteSocket.writable).catch(() => {});
+  remoteSocket.readable.pipeTo(new WritableStream({
+    write(chunk) {
+      server.send(chunk);
+    },
+    close() {
+      server.close();
+    },
+    abort(err) {
+      server.close(1011, err.message);
+    }
+  }));
+
+  return new Response(null, { status: 101, webSocket: client });
 }
 
-// Fungsi-fungsi lainnya tetap sama seperti sebelumnya, 
-// hanya menghapus parameter wildcard dan logika terkait wildcard
-
-async function generateClashSub(type, bug, tls, country = null, limit = null) {
-  // Implementasi generateClashSub tanpa wildcard
-  // ...
+// Helper functions
+function generateUUIDv4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = crypto.getRandomValues(new Uint8Array(1))[0] % 16;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
 }
 
-async function generateSurfboardSub(type, bug, tls, country = null, limit = null) {
-  // Implementasi generateSurfboardSub tanpa wildcard
-  // ...
+// Configuration generators (contoh satu generator)
+async function generateClashSub(type, bug, tls, country, limit = 20) {
+  const proxies = await getProxyList();
+  let config = proxies.slice(0, limit).map((p, i) => {
+    const uuid = generateUUIDv4();
+    return `- name: ${p.country} ${i+1}
+  type: ${type}
+  server: ${bug}
+  port: ${tls ? 443 : 80}
+  uuid: ${uuid}
+  tls: ${tls}
+  ${type === 'trojan' ? `password: ${uuid}` : ''}`;
+  }).join("\n");
+  
+  return `proxies:\n${config}`;
 }
 
-// Fungsi generator config lainnya disesuaikan dengan menghapus parameter wildcard
+// ... (Tambahkan generator config lainnya dengan pola serupa)
 
+// Handler untuk halaman web
 async function handleWebRequest(request) {
-  // Modifikasi handleWebRequest dengan menghapus logika wildcard
-  // ...
-  
-  const sanitize = (text) => text.replace(/[\n\r]+/g, "").trim();
-  let ispName = sanitize(`${emojiFlag} (${line.split(',')[2]}) ${line.split(',')[3]} ${count ++}`);
-  
-  // Menghapus wildcard dari config
-  const modifiedHostName = hostName;
-  
-  // Menghapus pilihan wildcard dari UI
-  // ...
+  // ... (Implementasi sederhana untuk halaman web)
+  return new Response("Web Interface", { headers: { "Content-Type": "text/html" } });
 }
 
-// Fungsi-fungsi lainnya tetap sama kecuali bagian yang berhubungan dengan wildcard
+async function handleSubRequest() {
+  // ... (Implementasi form generator)
+  return "<html>...</html>";
+}
