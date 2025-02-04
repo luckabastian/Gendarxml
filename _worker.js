@@ -1,20 +1,3 @@
-Untuk menghapus mode wildcard dari script yang Anda berikan, Anda perlu menghapus bagian yang terkait dengan wildcard dan menyesuaikan logika yang menggunakan wildcard tersebut. Berikut adalah langkah-langkah untuk menghapus mode wildcard:
-
-1. **Hapus Variabel `wildcards`**:
-   - Variabel `wildcards` yang berisi daftar domain wildcard dapat dihapus karena tidak akan digunakan lagi.
-
-2. **Hapus Logika Wildcard**:
-   - Cari bagian kode yang menggunakan `wildcard` atau `wildcards` dan hapus atau modifikasi logika tersebut.
-
-3. **Hapus Parameter Wildcard**:
-   - Hapus parameter `wildcard` dari fungsi yang menggunakan wildcard, seperti `generateClashSub`, `generateSurfboardSub`, dan lainnya.
-
-4. **Hapus Penggunaan Wildcard di HTML**:
-   - Hapus elemen HTML yang terkait dengan wildcard, seperti dropdown atau input yang memungkinkan pengguna memilih wildcard.
-
-Berikut adalah contoh script yang telah dimodifikasi dengan menghapus mode wildcard:
-
-```javascript
 import { connect } from "cloudflare:sockets";
 
 const proxyListURL = 'https://raw.githubusercontent.com/h58fmb0344g9h3/p57gdv3j3n0vg334/refs/heads/main/f74bjd2h2ko99f3j5';
