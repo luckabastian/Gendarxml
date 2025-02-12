@@ -70,11 +70,7 @@
         return;
       }
 
-      // Kirim data ke server atau lakukan sesuatu dengan data
-      console.log('Email:', email);
-      console.log('Global API Key:', apiKey);
-
-      // Contoh: Kirim data ke Worker atau API
+      // Kirim data ke Worker
       fetch('https://your-worker-name.your-account.workers.dev', {
         method: 'POST',
         headers: {
