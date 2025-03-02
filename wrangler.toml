@@ -1,9 +1,27 @@
-name = "gendar" # todo
+name = "cf-proxy" # todo
 #name = "cf-worker-connect-test" # todo
 #main = "test/worker/cf-cdn-cgi-trace2.js"
 #main = "test/worker/worker-connect-test.js"
 main = "_worker.js"
 compatibility_date = "2023-05-26"
+[[route]]
+pattern = "vpn.salut.biz.id"
+custom_domain = true
+[[route]]
+pattern = "quiz.int.vidio.com.vpn.salut.biz.id"
+custom_domain = true
+[[route]]
+pattern = "quiz.staging.vidio.com.vpn.salut.biz.id"
+custom_domain = true
+[[route]]
+pattern = "quiz.vidio.com.vpn.salut.biz.id"
+custom_domain = true
+[[route]]
+pattern = "support.vidio.com.vpn.salut.biz.id"
+custom_domain = true
+[[route]]
+pattern = "img.email1.vidio.com.vpn.salut.biz.id"
+custom_domain = true
 
 [vars]
 # UUID = "d342d11e-d424-4583-b36e-524ab1f0afa4"
@@ -13,4 +31,4 @@ compatibility_date = "2023-05-26"
 # API_TOKEN = "example_dev_token"
 # API_HOST = "api.v2board.com"
 PROXY_BANK_URL = "https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/proxyList.txt"
-
+UUID = ca2046e1-c8e0-4a00-a206-da2d577e2cc0
