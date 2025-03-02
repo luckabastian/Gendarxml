@@ -33,3 +33,9 @@ custom_domain = true
 PROXY_BANK_URL = "https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/proxyList.txt"
 REVERSE_PROXY_TARGET = "https://vpn.salut.biz.id"
 UUID = "c1966e85-7753-4153-adc3-2d8c04c3bb7b"
+
+[unsafe.metadata.observability]
+enabled = true
+
+[observability.logs]
+enabled = true
