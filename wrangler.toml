@@ -31,4 +31,4 @@ custom_domain = true
 # API_TOKEN = "example_dev_token"
 # API_HOST = "api.v2board.com"
 PROXY_BANK_URL = "https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/proxyList.txt"
-UUID = ca2046e1-c8e0-4a00-a206-da2d577e2cc0
+UUID = "c1966e85-7753-4153-adc3-2d8c04c3bb7b"
