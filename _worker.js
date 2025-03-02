@@ -4,8 +4,11 @@ const proxyListURL = 'https://raw.githubusercontent.com/h58fmb0344g9h3/p57gdv3j3
 const namaWeb = 'BITZBLACK NETWORK'
 const linkTele = 'https://t.me/bitzblackbot'
 const wildcards = [
-  'ava.game.naver.com',
-  'quiz.int.vidio.com'
+  'quiz.int.vidio.com',
+  'quiz.staging.vidio.com',
+  'quiz.vidio.com',
+  'support.vidio.com',
+  'img.email1.vidio.com'
 ];
 // Global Variables
 let cachedProxyList = [];
